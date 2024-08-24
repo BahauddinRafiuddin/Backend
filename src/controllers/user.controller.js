@@ -257,10 +257,36 @@ const changeUserPassword = asyncHandlers(async (req, res) => {
         )
 })
 
+// Return Current LoggedIn User........
 const getCurrentUSer = asyncHandlers(async (req, res) => {
     return res.status(200)
         .json(
             new ApiResopnse(200, req.user, "Current User Fetched Successfully")
         )
 })
-export { registerUser, loginUser, logOutUser, refreshAccessToken, changeUserPassword, getCurrentUSer }
+
+// Update User Acount Details....
+const updateUserAcountDetails = asyncHandlers(async (req, res) => {
+
+    const { username, email } = req.body
+
+    if (!(username || email)) {
+        throw ApiError(400, "UserName and Email Are Required!!")
+    }
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                username,
+                email
+            }
+        },
+        { new: true }
+    ).select("-password")
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, { user }, "UserName And Email Updated Successfully")
+        )
+})
+export { registerUser, loginUser, logOutUser, refreshAccessToken, changeUserPassword, getCurrentUSer, updateUserAcountDetails }
