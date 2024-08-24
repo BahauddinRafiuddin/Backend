@@ -202,7 +202,7 @@ const refreshAccessToken = asyncHandlers(async (req, res) => {
 
         // Finding User By Id That Already Present in decodedRefreshTokan...
         const user = await User.findById(decodedRefreshTokan?._id)
-        
+
         if (!user) {
             throw new ApiError(401, "Invalid Refresh Token!!")
         }
@@ -230,4 +230,30 @@ const refreshAccessToken = asyncHandlers(async (req, res) => {
         throw new ApiError(401, error?.message || "Invalid refresh token")
     }
 })
-export { registerUser, loginUser, logOutUser, refreshToken }
+
+// Handle change Password.......
+
+const changeUserPassword = asyncHandlers(async (req, res) => {
+
+    const { oldPassword, newPassword } = req.body
+
+    // This Is Change Password So User Must Be Loggdin So Auth Middleware Added And We Have User...
+    const user = await User.findById(req.user?._id)
+
+    // Checking Old Password Is Correct
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordValid) {
+        throw new ApiError(400, "Invalid Password!")
+    }
+
+    // Now WE Know We Password Is Correct So We Set old Password to new Password
+    user.password = newPassword
+    // Calling Save Method
+    await user.save({ validateBeforeSave: false })
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, {}, "Password Changed SuccessFully")
+        )
+})
+export { registerUser, loginUser, logOutUser, refreshAccessToken, changeUserPassword }
