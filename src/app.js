@@ -11,7 +11,7 @@ const app = express()
 app.use(cors({origin: process.env.CORS_ORIGIN,Credential: true}))
 
 // Set The Limit Of Json Data
-app.use(express.json({ limit: "1bkb" }))
+app.use(express.json({ limit: "16kb" }))
 
 // Allow Url To Encode space And Encode The Url
 app.use(express.urlencoded({extended: true,limit: "16kb"}))
@@ -22,6 +22,11 @@ app.use(express.static("public"))
 // Cookie To Perform CURD Operation ON Cookie
 app.use(cookieParser())
 
+// Define All Router In App.js..
+// Import Routers.................
+import userRouter from "./routes/user.routes.js"
+
+app.use("/api/v1/users",userRouter)
 
 
 
