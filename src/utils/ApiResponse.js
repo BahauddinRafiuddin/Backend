@@ -1,7 +1,7 @@
 class ApiResopnse {
     constructor(
         statusCode,
-        data = "SomeThong Went Wrong",
+        data,
         message = "Success"
     ) {
         this.statusCode = statusCode
