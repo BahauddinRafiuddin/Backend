@@ -35,7 +35,7 @@ const registerUser = asyncHandlers(async (req, res) => {
     // return res
 
     const { fullname, email, username, password } = req.body
-    console.log("Email: ", email)
+    // console.log("Email: ", email)
 
     // Validation....
     if (
@@ -63,7 +63,7 @@ const registerUser = asyncHandlers(async (req, res) => {
         throw new ApiError(400, "Avatar File Is Required!")
     } else {
         console.log("Avatar Is Saved On Your Public Folder")
-        // console.log("Avatar Path",avatarLocalPath)
+        console.log("Avatar Path", avatarLocalPath)
     }
 
     if (!coverImageLocalPath) {
@@ -133,7 +133,7 @@ const loginUser = asyncHandlers(async (req, res) => {
     }
 
     // Checking Password Entered By User Is valid or Not....
-    const validPassword = user.isPasswordCorrect(password, User.password)
+    const validPassword = await user.isPasswordCorrect(password, User.password)
     if (!validPassword) {
         throw new ApiError(401, "Invalid Credentials!!")
     }
@@ -238,6 +238,11 @@ const changeUserPassword = asyncHandlers(async (req, res) => {
 
     const { oldPassword, newPassword } = req.body
 
+    if (!(oldPassword || newPassword)) {
+        throw ApiError(400, "Old Password and New Password Are Required!!")
+    }
+    console.log("Old Pass: ", oldPassword)
+    console.log("new pass: ", newPassword)
     // This Is Change Password So User Must Be Loggdin So Auth Middleware Added And We Have User...
     const user = await User.findById(req.user?._id)
 
@@ -390,7 +395,7 @@ const getUserChannelProfile = asyncHandlers(async (req, res) => {
                     $size: "$subscribedTo"
                 },
                 isSubscribed: {
-                    $con: {
+                    $cond: {
                         if: { $in: [req.user?._id, "$subscribers.subscriber"] },
                         then: true,
                         else: false
@@ -425,51 +430,56 @@ const getUserChannelProfile = asyncHandlers(async (req, res) => {
 
 // Get Watch History..........
 const getWatchHistory = asyncHandlers(async (req, res) => {
-    const user = await User.aggregate([
-        // Pipline 1 For Match The Document...
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        // Pipline 2 For Look In to Videos Table...
-        {
-            $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                // Nested Pipeline For Look into User From Videos
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner"
-                        }
-                    },
-                    {
-                        $addFields: {
-                            owner: {
-                                $first: "$owner"
+
+    try {
+        const user = await User.aggregate([
+            // Pipline 1 For Match The Document...
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(req.user._id)
+                }
+            },
+            // Pipline 2 For Look In to Videos Table...
+            {
+                $lookup: {
+                    from: "videos",
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: "watchHistory",
+                    // Nested Pipeline For Look into User From Videos
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "owner"
+                            }
+                        },
+                        {
+                            $addFields: {
+                                owner: {
+                                    $first: "$owner"
+                                }
                             }
                         }
-                    }
-                ]
+                    ]
+                }
             }
-        }
-    ])
-
-    return res.status(200)
-    .json(
-        new ApiResopnse(200,user[0].watchHistory,"Watch History Fetch Successfullly")
-    )
+        ])
+    
+        return res.status(200)
+            .json(
+                new ApiResopnse(200, user[0].watchHistory, "Watch History Fetch Successfullly")
+            )
+    } catch (error) {
+        throw new ApiError(500,"Internel Server Error!")
+    }
 })
 export {
     registerUser, loginUser, logOutUser,
     refreshAccessToken, changeUserPassword,
     getCurrentUSer, updateUserAcountDetails,
     updateUserAvatar, updateUserCoverImage,
-    getUserChannelProfile,getWatchHistory
+    getUserChannelProfile, getWatchHistory
 }
