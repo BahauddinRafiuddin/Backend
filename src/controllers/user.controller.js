@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadCloudinary } from "../utils/cloudinary.js"
 import { ApiResopnse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose";
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
     try {
@@ -422,10 +423,53 @@ const getUserChannelProfile = asyncHandlers(async (req, res) => {
         )
 })
 
+// Get Watch History..........
+const getWatchHistory = asyncHandlers(async (req, res) => {
+    const user = await User.aggregate([
+        // Pipline 1 For Match The Document...
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        // Pipline 2 For Look In to Videos Table...
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                // Nested Pipeline For Look into User From Videos
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner"
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res.status(200)
+    .json(
+        new ApiResopnse(200,user[0].watchHistory,"Watch History Fetch Successfullly")
+    )
+})
 export {
     registerUser, loginUser, logOutUser,
     refreshAccessToken, changeUserPassword,
     getCurrentUSer, updateUserAcountDetails,
     updateUserAvatar, updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,getWatchHistory
 }
