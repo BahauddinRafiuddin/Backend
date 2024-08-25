@@ -1,5 +1,16 @@
 import { Router } from "express";
-import { loginUser, logOutUser, registerUser, getCurrentUSer, updateUserAcountDetails } from "../controllers/user.controller.js"
+import {
+    loginUser,
+    logOutUser,
+    registerUser,
+    getCurrentUSer,
+    updateUserAcountDetails,
+    changeUserPassword,
+    refreshAccessToken,
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile
+} from "../controllers/user.controller.js"
 import { upload } from '../middlewares/multer.middleware.js'
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -20,9 +31,17 @@ router.route("/register").post(
     registerUser
 )
 router.route("/login").post(loginUser)
-
+router.route("/refreshAccessToken").post(refreshAccessToken)
 // Secured Routes ..........Include MiddleWare...........
 router.route("/logout").post(verifyJWT, logOutUser)
 router.route("/getcurrentuser").post(verifyJWT, getCurrentUSer)
-router.route("/updateUserAcountDetails").post(verifyJWT, updateUserAcountDetails)
+router.route("/updateUserAcountDetails").patch(verifyJWT, updateUserAcountDetails)
+router.route("/change-password").post(verifyJWT, changeUserPassword)
+// Updating Images Endpoints...
+router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
+router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage)
+
+router.route("/channel-details/:username").get(verifyJWT, getUserChannelProfile)
+
+
 export default router

@@ -344,10 +344,88 @@ const updateUserCoverImage = asyncHandlers(async (req, res) => {
         )
 })
 
+// Handle User Chanel Profile Deatils...........
+
+const getUserChannelProfile = asyncHandlers(async (req, res) => {
+
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new ApiError(400, "UserName Is Required!!!")
+    }
+
+    // Writing Aggregate Pipelines............................
+    const channel = await User.aggregate([
+        // Pipeline 1..
+        {
+            $match: {
+                username
+            }
+        },
+        // Pipeline 2.. Finding Subscribers
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "channel",
+                as: "subscribers"
+            }
+        },
+        // Pipeline 3.. finding Whome User Subscribed
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        // Pipelines 4.. Creating Field Of SubsCount And SubscribeToCount...
+        {
+            $addFields: {
+                subscriberCount: {
+                    $size: "$subscribers"
+                },
+                channelsSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $con: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        // Pipeline 5 Returnig Which We Want ........
+        {
+            $project: {
+                username: 1,
+                email: 1,
+                fullname: 1,
+                subscriberCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1
+            }
+        }
+    ])
+
+    if (!channel?.length) {
+        throw new ApiError(400, "Channel Dose Not Exist!")
+    }
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, channel[0], "Channel Profile Details Fetch Successfully")
+        )
+})
 
 export {
     registerUser, loginUser, logOutUser,
     refreshAccessToken, changeUserPassword,
     getCurrentUSer, updateUserAcountDetails,
-    updateUserAvatar, updateUserCoverImage
+    updateUserAvatar, updateUserCoverImage,
+    getUserChannelProfile
 }
