@@ -63,22 +63,54 @@ const getVideoById = asyncHandlers(async (req, res) => {
     const { videoId } = req.params
 
     const video = await Video.findById(videoId).select("-videoFile -thumbnail")
-    
+
     return res.status(200)
-    .json(
-        new ApiResopnse(200,video,"Video Founded SuccessFully")
-    )
+        .json(
+            new ApiResopnse(200, video, "Video Founded SuccessFully")
+        )
 })
 
 const updateVideo = asyncHandlers(async (req, res) => {
     const { videoId } = req.params
-    //TODO: update video details like title, description, thumbnail
+    //TODO: update video details like title, description
+    const { title, description } = req.body
+    if (!(title || description)) {
+        throw new ApiError(400, "Title And Description Required!!")
+    }
 
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                title,
+                description
+            }
+        },
+        {
+            new: true
+        }
+    ).select("-videoFile -thumbnail")
+
+    if (!video) {
+        throw new ApiError(400, "video Not Foud!!")
+    }
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, video, "Title Description Updated Successfully")
+        )
 })
 
 const deleteVideo = asyncHandlers(async (req, res) => {
     const { videoId } = req.params
     //TODO: delete video
+
+    const video = await Video.findByIdAndDelete(videoId)
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, video, "Video Deleted SuccessFully")
+        )
 })
 
 const togglePublishStatus = asyncHandlers(async (req, res) => {
