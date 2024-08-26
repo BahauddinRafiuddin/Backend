@@ -40,7 +40,7 @@ const getUserPlaylists = asyncHandlers(async (req, res) => {
 
     // console.log(userPlayList)
 
-    if (!userPlayList) {
+    if (!userPlayList||userPlayList.length===0) {
         throw new ApiError(400, "User PlayList Is Not Available")
     }
 
