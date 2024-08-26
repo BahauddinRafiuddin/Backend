@@ -48,7 +48,6 @@ const publishAVideo = asyncHandlers(async (req, res) => {
         description,
         owner,
         duration: videoFile.duration,
-        isPublished: false
     })
 
     return res.status(200)
@@ -63,6 +62,9 @@ const getVideoById = asyncHandlers(async (req, res) => {
     const { videoId } = req.params
 
     const video = await Video.findById(videoId).select("-videoFile -thumbnail")
+    if (!video) {
+        throw new ApiError(400, "Video Does Not Exist!!")
+    }
 
     return res.status(200)
         .json(
@@ -115,6 +117,20 @@ const deleteVideo = asyncHandlers(async (req, res) => {
 
 const togglePublishStatus = asyncHandlers(async (req, res) => {
     const { videoId } = req.params
+
+    const video = await Video.findById(videoId).select("-videoFile -thumbnail")
+
+    if (!video) {
+        throw new ApiError(400, "Video Does Not Exist!!")
+    }
+
+    video.isPublished = !video.isPublished
+    await video.save()
+
+    return res.status(200)
+        .json(
+            new ApiResopnse(200, video, "Video Status Is Changed Successfully")
+        )
 })
 
 export {
