@@ -1,5 +1,13 @@
 import { Router } from "express";
-import { addVideoToPlaylist, createPlaylist, deletePlaylist, getPlaylistById, getUserPlaylists, removeVideoFromPlaylist, updatePlaylist } from "../controllers/playlist.controller";
+import {
+    addVideoToPlaylist,
+    createPlaylist,
+    deletePlaylist,
+    getPlaylistById,
+    getUserPlaylists,
+    removeVideoFromPlaylist,
+    updatePlaylist
+} from "../controllers/playlist.controller";
 
 
 const router = Router()
