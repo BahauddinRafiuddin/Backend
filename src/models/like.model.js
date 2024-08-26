@@ -12,7 +12,8 @@ const likeSchema = new Schema(
         },
         likedBy: {
             type: Schema.Types.ObjectId,
-            ref: "User"
+            ref: "User",
+            required:true
         },
         tweet: {
             type: Schema.Types.ObjectId,
