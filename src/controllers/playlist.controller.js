@@ -32,7 +32,13 @@ const getUserPlaylists = asyncHandlers(async (req, res) => {
         throw new ApiError(400, "User Id Required!!")
     }
     //TODO: get user playlists
-    const userPlayList = await Playlist.findById(userId)
+    const userPlayList = await Playlist.find({owner:userId})
+    .populate({
+        path:'owner',
+        select:'username fullname'
+    })
+
+    // console.log(userPlayList)
 
     if (!userPlayList) {
         throw new ApiError(400, "User PlayList Is Not Available")
