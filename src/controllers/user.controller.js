@@ -476,6 +476,7 @@ const getWatchHistory = asyncHandlers(async (req, res) => {
         throw new ApiError(500,"Internel Server Error!")
     }
 })
+
 export {
     registerUser, loginUser, logOutUser,
     refreshAccessToken, changeUserPassword,
